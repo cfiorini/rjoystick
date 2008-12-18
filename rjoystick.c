@@ -37,6 +37,7 @@
 static VALUE rb_mRjoystick;
 static VALUE rb_cDevice;
 static VALUE rb_cEvent;
+static VALUE rb_cSixaxis;
 
 void Init_rjoystick();
 
@@ -52,6 +53,15 @@ void jsdevice_free(int* fd)
 	free(fd);
 }
 
+void jssix_mark(int* fh)
+{
+	rb_gc_mark(*fh);
+}
+
+void jssix_free(int* fh)
+{
+	free(fh);
+}
 
 VALUE js_dev_init(VALUE klass, VALUE dev_path)
 {
@@ -179,6 +189,61 @@ VALUE js_event_value(VALUE klass)
 	return INT2FIX((fd && *fd >= 0) ? jse[*fd].value : -1);
 }
 
+VALUE js_six_init(VALUE klass, VALUE path)
+{
+	int *fh;
+	if((fh = malloc(sizeof(int))) != NULL) {
+		if((*fh = open(RSTRING(path)->ptr, O_RDONLY)) >= 0) {	
+			return Data_Wrap_Struct(klass, jssix_mark, jssix_free, fh);
+		} else
+			rb_raise(rb_eException, "Error opening %s", RSTRING(path)->ptr);
+	}
+	return Qnil;	
+}
+
+VALUE js_six_get_six(VALUE klass)
+{
+	int *fh;
+	int res;
+	int x = -1;
+	int y = -1;
+	int z = -1;
+	unsigned char buf[128];
+	VALUE saxis = rb_hash_new();
+
+
+	Data_Get_Struct(klass, int, fh);
+	if(res = read(*fh, buf, sizeof(buf))) {
+		if(res == 48) {
+   			x = buf[40]<<8 | buf[41];
+			y = buf[42]<<8 | buf[43];
+			z = buf[44]<<8 | buf[45];
+		} else if(res == 49) {
+			x = buf[41]<<8 | buf[42];
+			y = buf[43]<<8 | buf[44];
+			z = buf[45]<<8 | buf[46];
+		}
+
+		rb_hash_aset(saxis, ID2SYM(rb_intern("x")), INT2FIX(x));	
+		rb_hash_aset(saxis, ID2SYM(rb_intern("y")), INT2FIX(y));	
+		rb_hash_aset(saxis, ID2SYM(rb_intern("z")), INT2FIX(z));	
+
+		return saxis;
+	} else
+		rb_raise(rb_eException, "error");
+
+	return Qnil;
+}
+
+VALUE js_six_close(VALUE klass)
+{
+	int *fh;
+	
+	Data_Get_Struct(klass, int, fh);
+
+	return INT2FIX(close(*fh));
+}
+
 void Init_rjoystick()
 {
 	rb_mRjoystick = rb_define_module("Rjoystick");
@@ -199,6 +264,11 @@ void Init_rjoystick()
 	rb_define_method(rb_cEvent, "number", js_event_number, 0);
 	rb_define_method(rb_cEvent, "type", js_event_type, 0);
 		
+	rb_cSixaxis = rb_define_class_under(rb_mRjoystick, "SixAxis", rb_cObject);
+	rb_define_singleton_method(rb_cSixaxis, "new", js_six_init, 1);
+	rb_define_method(rb_cSixaxis, "get_sixaxis", js_six_get_six, 0); 
+	rb_define_method(rb_cSixaxis, "close", js_six_close, 0);
+
 	rb_define_const(rb_cEvent, "JSBUTTON", INT2FIX(JS_EVENT_BUTTON));
 	rb_define_const(rb_cEvent, "JSAXIS", INT2FIX(JS_EVENT_AXIS));
 }
