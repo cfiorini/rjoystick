@@ -1,0 +1,32 @@
+	Rjoystick - Ruby c binding to linux/joystick event
+	Copyright (c) 2008 Claudio Fiorini <claudio@cfiorini.it>
+
+		FIRST OF ALL
+thanks to Ruby core developer, Linux kernel developer and
+Pascal at http://www.pabr.org/sixlinux/sixlinux.en.html
+and to other people...and code that help me out.
+
+------------------------------------------------------
+This is a very small code to read input/joystick information
+like pressing buttons on joysticks( PS3 Sixaxis too :)! )
+to get things working i used jstest as example from Vojtech Pavlik
+and sixaxis patch from www.pabr.org
+
+This Ruby extension is written in C and works only on Linux systems.
+I have tested on Debian 4.0 and Ubuntu 8.04.
+To install the code just run:
+	# ruby extconf.rb
+	# make
+	# ruby example.rb
+
+1st example works ok with all joysticks that are good for linux.
+2nd example is only for PlayStation 3(copyright Sony) Sixaxis controller
+because gets 3-Axis accelerometer values and to get it works follow
+this tutorial first https://help.ubuntu.com/community/Sixaxis
+
+
+Sixaxis has a gyroscope but for now you can't get values from it with
+this extension...maybe in a future realease, but preatty soon i hope
+to give a complete values from bluetooth :) !!
+
+Claudio Fiorini
