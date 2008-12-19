@@ -22,11 +22,11 @@ To install the code just run:
 1st example works ok with all joysticks that are good for linux.
 2nd example is only for PlayStation 3(copyright Sony) Sixaxis controller
 because gets 3-Axis accelerometer values and to get it works follow
-this tutorial first https://help.ubuntu.com/community/Sixaxis
+this tutorial first https://help.ubuntu.com/community/Sixaxis and 
+you can use it in BT mode :) 
 
 
 Sixaxis has a gyroscope but for now you can't get values from it with
-this extension...maybe in a future realease, but preatty soon i hope
-to give a complete values from bluetooth :) !!
+this extension...maybe in a future realease :) !!
 
 Claudio Fiorini

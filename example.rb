@@ -16,14 +16,13 @@ while true
 	if e.type == Rjoystick::Event::JSBUTTON
 		break if e.number == 0
 		puts "Button: #{e.number} | #{e.type} #{e.value} #{e.time}"
+	end
 	if e.type == Rjoystick::Event::JSAXIS
 		puts "#{e.number} #{e.type} #{e.value} #{e.time}"
 	end	
 end
 k.close
 =end
-
-
 # example 2
 #
 #
