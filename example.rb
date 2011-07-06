@@ -1,4 +1,4 @@
-require "rjoystick.so"
+require_relative "rjoystick.so"
 
 =begin
 # example 1

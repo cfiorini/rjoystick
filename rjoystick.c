@@ -20,7 +20,7 @@
 
 
 #include "ruby.h"
-#include "rubyio.h"
+#include "ruby/io.h"
 #include <linux/joystick.h>
 #include <sys/select.h>
 #include <sys/time.h>
@@ -68,7 +68,7 @@ VALUE js_dev_init(VALUE klass, VALUE dev_path)
 	int *fd;
 	
 	if((fd = malloc(sizeof(int))) != NULL) {
-		if((*fd = open(RSTRING(dev_path)->ptr, O_RDONLY)) >= 0) {
+		if((*fd = open(RSTRING_PTR(dev_path), O_RDONLY)) >= 0) {
 			if(*fd >= MAX_JS)
 				rb_raise(rb_eException, "Error");
 			
@@ -193,10 +193,10 @@ VALUE js_six_init(VALUE klass, VALUE path)
 {
 	int *fh;
 	if((fh = malloc(sizeof(int))) != NULL) {
-		if((*fh = open(RSTRING(path)->ptr, O_RDONLY)) >= 0) {	
+		if((*fh = open(RSTRING_PTR(path), O_RDONLY)) >= 0) {	
 			return Data_Wrap_Struct(klass, jssix_mark, jssix_free, fh);
 		} else
-			rb_raise(rb_eException, "Error opening %s", RSTRING(path)->ptr);
+			rb_raise(rb_eException, "Error opening %s", RSTRING_PTR(path));
 	}
 	return Qnil;	
 }
