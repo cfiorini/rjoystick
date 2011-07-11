@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.2") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Claudio Fiorini}]
-  s.date = %q{2011-07-06}
+  s.date = %q{2011-07-11}
   s.description = %q{Ruby binding for linux kernel joystick}
   s.email = %q{claudio.fiorini@gmail.com}
   s.extensions = [%q{ext/extconf.rb}]
