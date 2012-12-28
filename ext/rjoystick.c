@@ -20,7 +20,7 @@
 
 
 #include "ruby.h"
-#include "rubyio.h"
+#include "ruby/io.h"
 #include <linux/joystick.h>
 #include <sys/select.h>
 #include <sys/time.h>

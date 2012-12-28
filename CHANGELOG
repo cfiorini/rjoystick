@@ -1,1 +1,5 @@
+0.1.1 28-dec-2012
+
+use rb_thread_blocking_region
+
 v0.1. rjoystick is now available as gem
