@@ -1,5 +1,17 @@
-	Rjoystick - Ruby c binding to linux/joystick event
-	Copyright (c) 2008 Claudio Fiorini <claudio@cfiorini.it>
+Now uses rb_thread_blocking_region to read events (not for sixaxis).
+That way you can read events in another thread without locking up the whole RVM:
+
+  dev = Rjoystick::Device.new '/dev/input/js0'
+
+  Thread.new do
+    dev.event
+  end
+
+  which is useful when you want to build another object that
+  holds the current joystick state to be queried anytime.
+
+Rjoystick - Ruby c binding to linux/joystick event
+Copyright (c) 2008 Claudio Fiorini <claudio@cfiorini.it>
 
 		FIRST OF ALL
 thanks to Ruby core developer, Linux kernel developer and
@@ -22,8 +34,8 @@ To install the code just run:
 1st example works ok with all joysticks that are good for linux.
 2nd example is only for PlayStation 3(copyright Sony) Sixaxis controller
 because gets 3-Axis accelerometer values and to get it works follow
-this tutorial first https://help.ubuntu.com/community/Sixaxis and 
-you can use it in BT mode :) 
+this tutorial first https://help.ubuntu.com/community/Sixaxis and
+you can use it in BT mode :)
 
 
 Sixaxis has a gyroscope but for now you can't get values from it with

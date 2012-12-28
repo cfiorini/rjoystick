@@ -1,5 +1,5 @@
 /**
- *   Rjoystick - Ruby binding for linux kernel joystick 
+ *   Rjoystick - Ruby binding for linux kernel joystick
  *   Copyright (C) 2008  Claudio Fiorini <claudio@cfiorini.it>
  *
  *   This program is free software: you can redistribute it and/or modify
@@ -66,15 +66,15 @@ void jssix_free(int* fh)
 VALUE js_dev_init(VALUE klass, VALUE dev_path)
 {
 	int *fd;
-	
+
 	if((fd = malloc(sizeof(int))) != NULL) {
 		if((*fd = open(RSTRING_PTR(dev_path), O_RDONLY)) >= 0) {
 			if(*fd >= MAX_JS)
 				rb_raise(rb_eException, "Error");
-			
+
 			return Data_Wrap_Struct(klass, jsdevice_mark, jsdevice_free, fd);
 		}
-	}	
+	}
 	return Qnil;
 }
 
@@ -135,27 +135,57 @@ VALUE js_dev_version(VALUE klass)
 	if(ioctl(*fd, JSIOCGVERSION, &version) == -1) {
 		rb_raise(rb_eException, "version error");
 	}
-		
-	sprintf(js_version, "%d.%d.%d\n", 	
+
+	sprintf(js_version, "%d.%d.%d\n",
 		version >> 16, (version >> 8) & 0xff, version & 0xff);
 
 	return rb_str_new2(js_version);
 }
 
+struct js_dev_blocking_read_param
+{
+	int fd;
+	struct js_event event;
+	int result;
+};
+
+VALUE js_dev_blocking_read( void * param )
+{
+	struct js_dev_blocking_read_param * jdbrp = (struct js_dev_blocking_read_param*)param;
+
+	jdbrp->result = read( jdbrp->fd, &jdbrp->event, sizeof(struct js_event) );
+
+	return Qnil;
+}
+
 VALUE js_dev_event_get(VALUE klass)
 {
-	int *fd;
+	int * fd;
+	struct js_dev_blocking_read_param jdbrp;
+
 	Data_Get_Struct(klass, int, fd);
-	if(read(*fd, &jse[*fd], sizeof(struct js_event)) > 0)
+
+	jdbrp.fd = *fd;
+	jdbrp.result = 0;
+
+	// kill thread if called, otherwise just return the event or nil
+	rb_thread_blocking_region(js_dev_blocking_read, &jdbrp, RUBY_UBF_IO, NULL);
+
+	if( jdbrp.result > 0)
+	{
+		jse[jdbrp.fd] = jdbrp.event;
 		return Data_Wrap_Struct(rb_cEvent, 0, 0, fd);
-	
-	return Qnil;
+	}
+	else
+	{
+		return Qnil;
+	}
 }
 
 VALUE js_dev_close(VALUE klass)
 {
 	int *fd;
-	
+
 	Data_Get_Struct(klass, int, fd);
 	close(*fd);
 	return Qnil;
@@ -179,7 +209,7 @@ VALUE js_event_time(VALUE klass)
 {
 	int *fd;
 	Data_Get_Struct(klass, int, fd);
-	return INT2FIX((fd && *fd >= 0) ? jse[*fd].time : -1);
+	return INT2FIX((fd && *fd >= 0) ? jse[*fd].time : 0);
 }
 
 VALUE js_event_value(VALUE klass)
@@ -193,12 +223,12 @@ VALUE js_six_init(VALUE klass, VALUE path)
 {
 	int *fh;
 	if((fh = malloc(sizeof(int))) != NULL) {
-		if((*fh = open(RSTRING_PTR(path), O_RDONLY)) >= 0) {	
+		if((*fh = open(RSTRING_PTR(path), O_RDONLY)) >= 0) {
 			return Data_Wrap_Struct(klass, jssix_mark, jssix_free, fh);
 		} else
 			rb_raise(rb_eException, "Error opening %s", RSTRING_PTR(path));
 	}
-	return Qnil;	
+	return Qnil;
 }
 
 VALUE js_six_get_six(VALUE klass)
@@ -224,9 +254,9 @@ VALUE js_six_get_six(VALUE klass)
 			z = buf[45]<<8 | buf[46];
 		}
 
-		rb_hash_aset(saxis, ID2SYM(rb_intern("x")), INT2FIX(x));	
-		rb_hash_aset(saxis, ID2SYM(rb_intern("y")), INT2FIX(y));	
-		rb_hash_aset(saxis, ID2SYM(rb_intern("z")), INT2FIX(z));	
+		rb_hash_aset(saxis, ID2SYM(rb_intern("x")), INT2FIX(x));
+		rb_hash_aset(saxis, ID2SYM(rb_intern("y")), INT2FIX(y));
+		rb_hash_aset(saxis, ID2SYM(rb_intern("z")), INT2FIX(z));
 
 		return saxis;
 	} else
@@ -238,7 +268,7 @@ VALUE js_six_get_six(VALUE klass)
 VALUE js_six_close(VALUE klass)
 {
 	int *fh;
-	
+
 	Data_Get_Struct(klass, int, fh);
 
 	return INT2FIX(close(*fh));
@@ -258,17 +288,18 @@ void Init_rjoystick()
 	rb_define_method(rb_cDevice, "event", js_dev_event_get, 0);
 	rb_define_method(rb_cDevice, "close", js_dev_close, 0);
 
-	rb_cEvent = rb_define_class_under(rb_mRjoystick, "Event", rb_cObject);	
+	rb_cEvent = rb_define_class_under(rb_mRjoystick, "Event", rb_cObject);
 	rb_define_method(rb_cEvent, "time", js_event_time, 0);
 	rb_define_method(rb_cEvent, "value", js_event_value, 0);
 	rb_define_method(rb_cEvent, "number", js_event_number, 0);
 	rb_define_method(rb_cEvent, "type", js_event_type, 0);
-		
+
 	rb_cSixaxis = rb_define_class_under(rb_mRjoystick, "SixAxis", rb_cObject);
 	rb_define_singleton_method(rb_cSixaxis, "new", js_six_init, 1);
-	rb_define_method(rb_cSixaxis, "get_sixaxis", js_six_get_six, 0); 
+	rb_define_method(rb_cSixaxis, "get_sixaxis", js_six_get_six, 0);
 	rb_define_method(rb_cSixaxis, "close", js_six_close, 0);
 
 	rb_define_const(rb_cEvent, "JSBUTTON", INT2FIX(JS_EVENT_BUTTON));
 	rb_define_const(rb_cEvent, "JSAXIS", INT2FIX(JS_EVENT_AXIS));
+	rb_define_const(rb_cEvent, "JSINIT", INT2FIX(JS_EVENT_INIT));
 }
