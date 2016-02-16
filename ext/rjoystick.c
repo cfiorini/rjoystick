@@ -169,7 +169,7 @@ VALUE js_dev_event_get(VALUE klass)
 	jdbrp.result = 0;
 
 	// kill thread if called, otherwise just return the event or nil
-	rb_thread_blocking_region(js_dev_blocking_read, &jdbrp, RUBY_UBF_IO, NULL);
+	rb_thread_call_without_gvl(js_dev_blocking_read, &jdbrp, RUBY_UBF_IO, NULL);
 
 	if( jdbrp.result > 0)
 	{
